@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+pydantic
+sqlite3
+python-multipart
+pandas
+matplotlib
+tabula-py
+groq
