@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import shutil
 import os
-from backend.query_agent import answer_question_from_text, process_uploaded_file  # your existing functions
+from backend.query_agent import answer_question, process_uploaded_file  # updated import
 
 app = FastAPI()
 
@@ -22,7 +22,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Health check (optional)
+# Health check
 @app.get("/")
 def root():
     return {"message": "Backend is live!"}
@@ -34,7 +34,9 @@ async def ask(question: dict):
         user_question = question.get("question")
         if not user_question:
             raise HTTPException(status_code=400, detail="Question is required.")
-        response = answer_question_from_text(user_question)  # your existing function
+        
+        # Updated function call
+        response = answer_question(user_question)
         return response
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
@@ -53,7 +55,7 @@ async def upload_file(file: UploadFile = File(...)):
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
         
-        # Process the file using your existing function
+        # Process the file using query_agent function
         response = process_uploaded_file(file_path)
         return response
     except Exception as e:
