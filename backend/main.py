@@ -2,7 +2,7 @@
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from backend.query_agent import answer_question
-from file_utils import execute_sql, generate_plot
+from backend.file_utils import execute_sql, generate_plot
 
 app = FastAPI()
 
