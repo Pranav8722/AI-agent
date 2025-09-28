@@ -9,7 +9,7 @@ app = FastAPI()
 # Allow frontend domain (replace '*' with your deployed frontend URL later)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # <-- update this when frontend deployed
+    allow_origins=["https://ai-agent-six-brown.vercel.app/"],  # <-- update this when frontend deployed
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

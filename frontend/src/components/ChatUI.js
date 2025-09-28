@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import "./ChatUI.css";
 
+// Replace with your Render backend URL
+const BACKEND_URL = "https://ai-agent-8-y2rc.onrender.com";
+
 export default function ChatUI() {
   const [q, setQ] = useState("");
   const [lastQuestion, setLastQuestion] = useState("");
@@ -15,7 +18,7 @@ export default function ChatUI() {
     if (!q) return;
     setLoading(true);
     try {
-      const r = await fetch("/ask", {
+      const r = await fetch(`${BACKEND_URL}/ask`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question: q }),
@@ -36,13 +39,25 @@ export default function ChatUI() {
   async function handleUpload(e) {
     const file = e.target.files[0];
     if (!file) return;
+
     setUploading(true);
     setUploadMessage("");
     setUploadedCols([]);
+
     const fd = new FormData();
     fd.append("file", file);
+
     try {
-      const r = await fetch("/upload", { method: "POST", body: fd });
+      const r = await fetch(`${BACKEND_URL}/upload`, {
+        method: "POST",
+        body: fd,
+      });
+
+      if (!r.ok) {
+        const text = await r.text();
+        throw new Error(text || "Upload failed");
+      }
+
       const data = await r.json();
       if (data.error) {
         setUploadMessage("❌ " + data.error);
@@ -119,7 +134,9 @@ export default function ChatUI() {
               <strong>Aggregated Data:</strong>
               <table>
                 <thead>
-                  <tr>{Object.keys(resp.aggregated_result[0]).map((c, i) => <th key={i}>{c}</th>)}</tr>
+                  <tr>
+                    {Object.keys(resp.aggregated_result[0]).map((c, i) => <th key={i}>{c}</th>)}
+                  </tr>
                 </thead>
                 <tbody>
                   {resp.aggregated_result.map((row, ri) => (
