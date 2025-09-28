@@ -2,8 +2,9 @@
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from file_utils import save_file, load_excel, load_csv, load_pdf
-from query_agent import answer_question
+from backend.file_utils import save_file, load_excel, load_csv, load_pdf
+
+from backend.query_agent import answer_question
 
 app = FastAPI()
 
