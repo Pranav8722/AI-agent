@@ -1,15 +1,15 @@
 # Python
 __pycache__/
-*.py[cod]
-*.env
-*.venv
-*.egg-info/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
 *.sqlite3
+*.db
+*.log
+*.env
 uploads/
-uploaded_data.db
-
-# Node / React frontend
-node_modules/
-build/
-dist/
-.env
+*.DS_Store
