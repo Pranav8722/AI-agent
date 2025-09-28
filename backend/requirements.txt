@@ -1,9 +1,7 @@
-fastapi
-uvicorn
-pydantic
-
-python-multipart
-pandas
-matplotlib
-tabula-py
-groq
+fastapi==0.117.1
+uvicorn==0.37.0
+pandas==2.3.2
+numpy==2.3.3
+matplotlib==3.10.6
+python-multipart==0.0.20
+aiofiles==24.1.0

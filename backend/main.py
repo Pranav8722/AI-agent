@@ -1,27 +1,26 @@
+# backend/main.py
 from fastapi import FastAPI, UploadFile, File
-from fastapi.responses import JSONResponse
-from fastapi.staticfiles import StaticFiles
-from backend.query_agent import answer_question, handle_file_upload  # your existing logic
+from fastapi.middleware.cors import CORSMiddleware
+from backend.query_agent import answer_question
+from backend.file_utils import execute_sql, generate_plot
 
 app = FastAPI()
 
-# Serve React build folder
-app.mount("/", StaticFiles(directory="frontend/build", html=True), name="frontend")
+# Allow frontend domain (replace '*' with your deployed frontend URL later)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # <-- update this when frontend deployed
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-# API route to ask SQL questions
 @app.post("/ask")
-async def ask(data: dict):
-    question = data.get("question")
-    if not question:
-        return JSONResponse(content={"sql": None, "answer": "No question provided", "result": None})
-    response = answer_question(question)
-    return response
+async def ask_question(payload: dict):
+    question = payload.get("question")
+    sql, answer, result, plot = answer_question(question)
+    return {"sql": sql, "answer": answer, "result": result, "plot": plot}
 
-# API route to handle file upload
 @app.post("/upload")
-async def upload(file: UploadFile = File(...)):
-    try:
-        result = await handle_file_upload(file)
-        return result
-    except Exception as e:
-        return JSONResponse(content={"error": str(e)})
+async def upload_file(file: UploadFile = File(...)):
+    return await execute_sql(file)
