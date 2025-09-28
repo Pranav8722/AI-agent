@@ -2,16 +2,15 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-import shutil
-import os
-from backend.query_agent import answer_question, process_uploaded_file  # updated imports
+import os, shutil
+from backend.query_agent import answer_question, process_uploaded_file
 
 app = FastAPI()
 
-# CORS settings
+# ---------- CORS Settings ----------
 origins = [
-    "https://ai-agent-six-brown.vercel.app",  # Your frontend URL
-    "http://localhost:3000"  # Optional for local testing
+    "https://ai-agent-six-brown.vercel.app",  # Frontend URL
+    "http://localhost:3000"  # Local testing
 ]
 
 app.add_middleware(
@@ -22,24 +21,24 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Health check (optional)
+# ---------- Health Check ----------
 @app.get("/")
 def root():
     return {"message": "Backend is live!"}
 
-# Ask SQL question endpoint
+# ---------- Ask SQL Question ----------
 @app.post("/ask")
 async def ask(question: dict):
     try:
         user_question = question.get("question")
         if not user_question:
             raise HTTPException(status_code=400, detail="Question is required.")
-        response = answer_question(user_question)  # call the correct function from query_agent.py
+        response = answer_question(user_question)
         return response
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 
-# File upload endpoint
+# ---------- File Upload ----------
 @app.post("/upload")
 async def upload_file(file: UploadFile = File(...)):
     try:
@@ -53,7 +52,6 @@ async def upload_file(file: UploadFile = File(...)):
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
         
-        # Process the file using query_agent
         response = process_uploaded_file(file_path)
         return response
     except Exception as e:

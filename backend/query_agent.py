@@ -4,13 +4,13 @@ import re
 import sqlite3
 from pathlib import Path
 from groq import Groq
-from backend.file_utils import execute_sql, generate_plot
-
 import pandas as pd
+from backend.file_utils import execute_sql, generate_plot
 
 BASE_DIR = Path(__file__).parent
 DB_PATH = BASE_DIR / (os.getenv("DB_FILE", "uploaded_data.db"))
 
+# Groq API setup
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 if not GROQ_API_KEY:
     raise RuntimeError("GROQ_API_KEY not set in environment")
@@ -19,7 +19,11 @@ client = Groq(api_key=GROQ_API_KEY)
 MODEL = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
 
 
+# ---------- SQL Query Generation ----------
+
 def get_schema_text():
+    if not DB_PATH.exists():
+        return "No tables loaded."
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
     cur.execute("SELECT name FROM sqlite_master WHERE type='table';")
@@ -81,16 +85,14 @@ def answer_question(question: str, agg_threshold: int = 50):
             df = pd.DataFrame(result["rows"], columns=result["columns"])
             num_cols = df.select_dtypes(include="number").columns.tolist()
 
-            # Aggregate if rows exceed threshold
             if len(df) > agg_threshold and len(num_cols) >= 1:
                 df = df.groupby(df.columns[0])[num_cols[0]].sum().reset_index()
                 aggregated_result = df.to_dict(orient="records")
 
-            # Generate plot using first column as X and first numeric as Y
             if len(df.columns) >= 2 and len(num_cols) >= 1:
                 plot = generate_plot(df, df.columns[0], num_cols[0], kind="bar")
 
-        except Exception as e:
+        except Exception:
             plot = None
 
     return {
@@ -100,3 +102,28 @@ def answer_question(question: str, agg_threshold: int = 50):
         "aggregated_result": aggregated_result,
         "plot": plot
     }
+
+
+# ---------- File Upload Handling ----------
+
+def process_uploaded_file(file_path: str):
+    """
+    Process uploaded CSV or Excel file and store in SQLite database.
+    """
+    table_name = os.path.splitext(os.path.basename(file_path))[0]
+
+    try:
+        if file_path.endswith(".csv"):
+            df = pd.read_csv(file_path)
+        elif file_path.endswith((".xls", ".xlsx")):
+            df = pd.read_excel(file_path)
+        else:
+            return {"error": "Unsupported file type"}
+
+        conn = sqlite3.connect(DB_PATH)
+        df.to_sql(table_name, conn, if_exists="replace", index=False)
+        conn.close()
+
+        return {"message": f"File '{file_path}' uploaded and table '{table_name}' created successfully."}
+    except Exception as e:
+        return {"error": str(e)}
