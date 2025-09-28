@@ -1,42 +1,33 @@
-# backend/main.py
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from backend.file_utils import save_file, load_excel, load_csv, load_pdf
+from fastapi.staticfiles import StaticFiles
+from backend.query_agent import answer_question  # your existing backend logic
 
-from backend.query_agent import answer_question
+app = FastAPI(title="AI Agent Backend")
 
-app = FastAPI()
-
+# Allow frontend to communicate with backend (CORS)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["*"],  # or specify your domain
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-class Question(BaseModel):
-    question: str
+# Serve React frontend
+app.mount("/", StaticFiles(directory="../frontend/build", html=True), name="frontend")
 
-@app.post("/ask")
-def ask_ai(payload: Question):
-    return answer_question(payload.question, agg_threshold=50)
+# Example API route
+@app.get("/api/hello")
+def hello():
+    return {"message": "Hello from FastAPI!"}
 
-@app.post("/upload")
-async def upload_file(file: UploadFile = File(...)):
-    fname = file.filename.lower()
-    saved = save_file(file)
-    ext = fname.split(".")[-1]
+# Your existing API routes
+# Make sure to prefix with /api to avoid conflict with React routes
+@app.post("/api/question")
+def ask_question(question: str):
     try:
-        if ext in ("csv",):
-            cols = load_csv(saved)
-        elif ext in ("xls", "xlsx"):
-            cols = load_excel(saved)
-        elif ext in ("pdf",):
-            cols = load_pdf(saved)
-        else:
-            return {"error": f"Unsupported file type: {ext}"}
-        return {"message": f"{file.filename} uploaded", "columns": cols}
+        answer = answer_question(question)  # your existing function
+        return {"question": question, "answer": answer}
     except Exception as e:
-        return {"error": str(e)}
+        raise HTTPException(status_code=500, detail=str(e))

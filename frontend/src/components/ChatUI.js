@@ -15,12 +15,12 @@ export default function ChatUI() {
     if (!q) return;
     setLoading(true);
     try {
-      const r = await fetch("http://127.0.0.1:8000/ask", {
+      const res = await fetch("/api/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question: q }),
       });
-      const data = await r.json();
+      const data = await res.json();
       setResp(data);
       setLastQuestion(q);
     } catch (err) {
@@ -39,14 +39,16 @@ export default function ChatUI() {
     setUploading(true);
     setUploadMessage("");
     setUploadedCols([]);
+
     const fd = new FormData();
     fd.append("file", file);
+
     try {
-      const r = await fetch("http://127.0.0.1:8000/upload", {
+      const res = await fetch("/api/upload", {
         method: "POST",
         body: fd,
       });
-      const data = await r.json();
+      const data = await res.json();
       if (data.error) {
         setUploadMessage("❌ " + data.error);
       } else {
@@ -110,7 +112,7 @@ export default function ChatUI() {
                 <tbody>
                   {resp.result.rows.map((row, ri) => (
                     <tr key={ri}>
-                      {row.map((cell, ci) => <td key={ci}>{cell === null ? 'NULL' : String(cell)}</td>)}
+                      {row.map((cell, ci) => <td key={ci}>{cell ?? 'NULL'}</td>)}
                     </tr>
                   ))}
                 </tbody>
@@ -119,7 +121,7 @@ export default function ChatUI() {
           )}
 
           {/* Aggregated Table */}
-          {resp.aggregated_result && resp.aggregated_result.length > 0 && (
+          {resp.aggregated_result?.length > 0 && (
             <div className="table-container">
               <strong>Aggregated Data:</strong>
               <table>
@@ -131,7 +133,7 @@ export default function ChatUI() {
                 <tbody>
                   {resp.aggregated_result.map((row, ri) => (
                     <tr key={ri}>
-                      {Object.values(row).map((cell, ci) => <td key={ci}>{cell === null ? 'NULL' : String(cell)}</td>)}
+                      {Object.values(row).map((cell, ci) => <td key={ci}>{cell ?? 'NULL'}</td>)}
                     </tr>
                   ))}
                 </tbody>
