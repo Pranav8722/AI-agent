@@ -15,12 +15,12 @@ export default function ChatUI() {
     if (!q) return;
     setLoading(true);
     try {
-      const res = await fetch("/api/ask", {
+      const r = await fetch("/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question: q }),
       });
-      const data = await res.json();
+      const data = await r.json();
       setResp(data);
       setLastQuestion(q);
     } catch (err) {
@@ -39,16 +39,11 @@ export default function ChatUI() {
     setUploading(true);
     setUploadMessage("");
     setUploadedCols([]);
-
     const fd = new FormData();
     fd.append("file", file);
-
     try {
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        body: fd,
-      });
-      const data = await res.json();
+      const r = await fetch("/upload", { method: "POST", body: fd });
+      const data = await r.json();
       if (data.error) {
         setUploadMessage("❌ " + data.error);
       } else {
@@ -96,9 +91,7 @@ export default function ChatUI() {
       {resp && (
         <div className="response-card">
           <div><strong>Question:</strong> {lastQuestion}</div>
-
-          {resp.sql && (<div><strong>SQL:</strong><pre>{resp.sql}</pre></div>)}
-
+          {resp.sql && <div><strong>SQL:</strong><pre>{resp.sql}</pre></div>}
           <div><strong>Answer:</strong><p>{resp.answer}</p></div>
 
           {/* Raw Table */}
@@ -112,7 +105,7 @@ export default function ChatUI() {
                 <tbody>
                   {resp.result.rows.map((row, ri) => (
                     <tr key={ri}>
-                      {row.map((cell, ci) => <td key={ci}>{cell ?? 'NULL'}</td>)}
+                      {row.map((cell, ci) => <td key={ci}>{cell ?? "NULL"}</td>)}
                     </tr>
                   ))}
                 </tbody>
@@ -126,14 +119,12 @@ export default function ChatUI() {
               <strong>Aggregated Data:</strong>
               <table>
                 <thead>
-                  <tr>
-                    {Object.keys(resp.aggregated_result[0]).map((c, i) => <th key={i}>{c}</th>)}
-                  </tr>
+                  <tr>{Object.keys(resp.aggregated_result[0]).map((c, i) => <th key={i}>{c}</th>)}</tr>
                 </thead>
                 <tbody>
                   {resp.aggregated_result.map((row, ri) => (
                     <tr key={ri}>
-                      {Object.values(row).map((cell, ci) => <td key={ci}>{cell ?? 'NULL'}</td>)}
+                      {Object.values(row).map((cell, ci) => <td key={ci}>{cell ?? "NULL"}</td>)}
                     </tr>
                   ))}
                 </tbody>
@@ -145,11 +136,7 @@ export default function ChatUI() {
           {resp.plot && (
             <div className="plot-container">
               <strong>Plot:</strong>
-              <img
-                src={resp.plot}
-                alt="plot"
-                style={{ maxWidth: "100%", marginTop: 10, marginLeft: 10 }}
-              />
+              <img src={resp.plot} alt="plot" style={{ maxWidth: "100%", marginTop: 10 }} />
             </div>
           )}
         </div>

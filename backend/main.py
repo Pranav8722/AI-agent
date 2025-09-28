@@ -1,33 +1,27 @@
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, UploadFile, File
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
-from backend.query_agent import answer_question  # your existing backend logic
+from backend.query_agent import answer_question, handle_file_upload  # your existing logic
 
-app = FastAPI(title="AI Agent Backend")
+app = FastAPI()
 
-# Allow frontend to communicate with backend (CORS)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # or specify your domain
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Serve React build folder
+app.mount("/", StaticFiles(directory="frontend/build", html=True), name="frontend")
 
-# Serve React frontend
-app.mount("/", StaticFiles(directory="../frontend/build", html=True), name="frontend")
+# API route to ask SQL questions
+@app.post("/ask")
+async def ask(data: dict):
+    question = data.get("question")
+    if not question:
+        return JSONResponse(content={"sql": None, "answer": "No question provided", "result": None})
+    response = answer_question(question)
+    return response
 
-# Example API route
-@app.get("/api/hello")
-def hello():
-    return {"message": "Hello from FastAPI!"}
-
-# Your existing API routes
-# Make sure to prefix with /api to avoid conflict with React routes
-@app.post("/api/question")
-def ask_question(question: str):
+# API route to handle file upload
+@app.post("/upload")
+async def upload(file: UploadFile = File(...)):
     try:
-        answer = answer_question(question)  # your existing function
-        return {"question": question, "answer": answer}
+        result = await handle_file_upload(file)
+        return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        return JSONResponse(content={"error": str(e)})
