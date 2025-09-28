@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.py[cod]
+*.env
+*.venv
+*.egg-info/
+*.sqlite3
+uploads/
+uploaded_data.db
+
+# Node / React frontend
+node_modules/
+build/
+dist/
+.env
